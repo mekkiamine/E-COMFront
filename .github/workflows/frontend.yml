@@ -19,54 +19,7 @@ jobs:
 
 
       # ==========================================
-      # 2. Check environment
-      # ==========================================
-      - name: Check environment
-        run: |
-          echo "=== Runner information ==="
-          uname -a
-
-          echo "=== Docker ==="
-          docker --version
-
-          echo "=== Node on host ==="
-          node --version || true
-
-          echo "=== npm on host ==="
-          npm --version || true
-
-
-      # ==========================================
-      # 3. Install dependencies + build Angular
-      #    inside Node 22 container
-      # ==========================================
-      - name: Build Angular
-        run: |
-          docker run --rm \
-            -v "$PWD:/app" \
-            -w /app \
-            node:22-alpine \
-            sh -c "npm ci && npm run build"
-
-
-      # ==========================================
-      # 4. Verify Angular build
-      # ==========================================
-      - name: Verify Angular build
-        run: |
-          echo "Checking Angular build output..."
-
-          if [ ! -d "dist/ecomfront/browser" ]; then
-            echo "ERROR: Angular build output not found!"
-            exit 1
-          fi
-
-          echo "Angular build successful!"
-          ls -la dist/ecomfront/browser
-
-
-      # ==========================================
-      # 5. Login to Docker Hub
+      # 2. Login to Docker Hub
       # ==========================================
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -76,7 +29,7 @@ jobs:
 
 
       # ==========================================
-      # 6. Build Docker image
+      # 3. Build Angular + Docker image
       # ==========================================
       - name: Build Docker image
         run: |
@@ -86,7 +39,7 @@ jobs:
 
 
       # ==========================================
-      # 7. Push latest image
+      # 4. Push latest image
       # ==========================================
       - name: Push latest image
         run: |
@@ -94,7 +47,7 @@ jobs:
 
 
       # ==========================================
-      # 8. Push commit-specific image
+      # 5. Push commit-specific image
       # ==========================================
       - name: Push commit image
         run: |
