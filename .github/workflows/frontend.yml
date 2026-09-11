@@ -1,55 +1,22 @@
-name: Frontend CI/CD
+- name: Update GitOps repository
+  env:
+    GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+    IMAGE_TAG: ${{ github.sha }}
+  run: |
+    git clone https://x-access-token:${GITOPS_TOKEN}@github.com/mekkiamine/E-ComK8s.git gitops
 
-on:
-  push:
-    branches:
-      - main
+    cd gitops
 
-jobs:
-  frontend:
-    runs-on: [self-hosted, docker, ubuntu-24.04]
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-    steps:
+    sed -i \
+      "s|image: mendax1/e-comfront:.*|image: mendax1/e-comfront:${IMAGE_TAG}|" \
+      apps/frontend/deployment.yaml
 
-      # ==========================================
-      # 1. Checkout source code
-      # ==========================================
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    git add apps/frontend/deployment.yaml
 
+    git commit -m "update frontend image to ${IMAGE_TAG}" || echo "No changes to commit"
 
-      # ==========================================
-      # 2. Login to Docker Hub
-      # ==========================================
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-
-      # ==========================================
-      # 3. Build Angular + Docker image
-      # ==========================================
-      - name: Build Docker image
-        run: |
-          docker build \
-            -t mendax1/e-comfront:latest \
-            -t mendax1/e-comfront:${{ github.sha }} .
-
-
-      # ==========================================
-      # 4. Push latest image
-      # ==========================================
-      - name: Push latest image
-        run: |
-          docker push mendax1/e-comfront:latest
-
-
-      # ==========================================
-      # 5. Push commit-specific image
-      # ==========================================
-      - name: Push commit image
-        run: |
-          docker push mendax1/e-comfront:${{ github.sha }}
+    git push origin main
 
